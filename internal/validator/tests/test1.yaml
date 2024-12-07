@@ -1,5 +1,5 @@
 podspec:
-  tests:
+  containers:
     mycontainer:
       enabled: false
       image:

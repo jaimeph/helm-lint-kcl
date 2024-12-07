@@ -22,8 +22,8 @@ func TestValidate(t *testing.T) {
 	}{
 		{
 			name:    "valid input",
-			values:  LoadFileToBytes("tests/test1.k"),
-			schemas: LoadFileToBytes("tests/test1.yaml"),
+			values:  LoadFileToBytes("tests/test1.yaml"),
+			schemas: LoadFileToBytes("tests/test1.k"),
 			wantErr: false,
 		},
 		{

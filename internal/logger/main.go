@@ -24,29 +24,29 @@ func SetLevelDebug(active bool) {
 }
 
 func Infof(message string, args ...interface{}) {
-	fmt.Printf(" INFO "+message+"\n", args...)
+	fmt.Printf(message+"\n", args...)
 }
 
 func Info(message string) {
-	fmt.Println(" INFO " + message)
+	fmt.Println(message)
 }
 
 func Debugf(message string, args ...interface{}) {
 	if level >= LevelDebug {
-		fmt.Printf("DEBUG "+message+"\n", args...)
+		fmt.Printf(message+"\n", args...)
 	}
 }
 
 func Debug(message string) {
 	if level >= LevelDebug {
-		fmt.Println("DEBUG " + message)
+		fmt.Println(message)
 	}
 }
 
 func Errorf(message string, args ...interface{}) {
-	fmt.Printf("ERROR "+message+"\n", args...)
+	fmt.Printf(message+"\n", args...)
 }
 
 func Error(message string) {
-	fmt.Println("ERROR " + message)
+	fmt.Println(message)
 }

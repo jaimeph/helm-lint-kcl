@@ -16,9 +16,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-go@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
           go-version: "1.23"
+          cache: true
 
       - name: Install GoReleaser
         uses: goreleaser/goreleaser-action@v6
