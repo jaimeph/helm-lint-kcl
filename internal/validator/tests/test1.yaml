@@ -1,0 +1,7 @@
+podspec:
+  tests:
+    mycontainer:
+      enabled: false
+      image:
+        repository: myrepo
+        tag: latest

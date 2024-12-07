@@ -1,0 +1,26 @@
+name: lint-kcl
+version: 0.0.0
+usage: "Validate Helm values using KCL schemas"
+description: |-
+  A Helm plugin to validate values.yaml using KCL schemas defined in schemas.k.
+  This plugin allows using KCL schemas instead of JSON schema for validating values.
+command: "$HELM_PLUGIN_DIR/bin/helm-lint-kcl"
+hooks:
+  install: "cd $HELM_PLUGIN_DIR && scripts/install.sh"
+  update: "cd $HELM_PLUGIN_DIR && scripts/install.sh"
+platformCommand:
+  - os: linux
+    arch: amd64
+    command: "$HELM_PLUGIN_DIR/bin/helm-lint-kcl"
+  - os: linux
+    arch: arm64
+    command: "$HELM_PLUGIN_DIR/bin/helm-lint-kcl"
+  - os: darwin
+    arch: amd64
+    command: "$HELM_PLUGIN_DIR/bin/helm-lint-kcl"
+  - os: darwin
+    arch: arm64
+    command: "$HELM_PLUGIN_DIR/bin/helm-lint-kcl"
+  - os: windows
+    arch: amd64
+    command: "$HELM_PLUGIN_DIR/bin/helm-lint-kcl.exe"
