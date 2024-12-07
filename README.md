@@ -7,7 +7,7 @@
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/lint-kcl)](https://artifacthub.io/packages/search?repo=lint-kcl)
 # Helm Lint KCL Plugin
 
-A Helm plugin that uses KCL schemas to validate values. Instead of using JSON Schema in `values.schema.json`, you can write schema KCL validation in `schemas.k`.
+A Helm plugin that uses KCL schemas to validate values. Instead of using JSON Schema in `values.schema.json`, you can write schemas KCL validation in `schemas.k`.
 
 ## Installation
 
