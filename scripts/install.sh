@@ -56,3 +56,4 @@ if [ "$OS" != "Windows" ]; then
 fi
 
 echo "Helm lint KCL plugin is installed successfully!"
+

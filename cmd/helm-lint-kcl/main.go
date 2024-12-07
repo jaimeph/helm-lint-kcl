@@ -9,6 +9,7 @@ import (
 	"github.com/jaimeph/helm-lint-kcl/internal/merger"
 	"github.com/jaimeph/helm-lint-kcl/internal/validator"
 	"github.com/spf13/cobra"
+	"kcl-lang.io/kcl-go"
 )
 
 const (
@@ -17,11 +18,15 @@ const (
 )
 
 var (
-	debug      bool
-	showValues bool
-	version    string
-	values     []string
-	sets       []string
+	chartVersion string
+	values       []string
+	sets         []string
+
+	debug       bool
+	showValues  bool
+	showSchemas bool
+
+	appVersion string = "0.0.0"
 )
 
 func main() {
@@ -35,9 +40,10 @@ func main() {
 		SilenceUsage:  true,
 	}
 
-	rootCmd.Flags().StringVarP(&version, "version", "v", "", "chart version")
+	rootCmd.Flags().StringVarP(&chartVersion, "version", "v", "", "chart version")
 	rootCmd.Flags().BoolVar(&debug, "debug", false, "enable debug")
 	rootCmd.Flags().BoolVar(&showValues, "show-values", false, "show values")
+	rootCmd.Flags().BoolVar(&showSchemas, "show-schemas", false, "show schemas")
 	rootCmd.Flags().StringSliceVarP(&values, "values", "f", []string{},
 		"specify values in a YAML file or a URL (can specify multiple)")
 	rootCmd.Flags().StringSliceVar(&sets, "set", []string{},
@@ -50,7 +56,6 @@ func main() {
 }
 
 func mainArgs(cmd *cobra.Command, args []string) error {
-	logger.SetLevelDebug(debug)
 	if len(args) != 2 {
 		return fmt.Errorf("name and chart are required")
 	}
@@ -58,13 +63,16 @@ func mainArgs(cmd *cobra.Command, args []string) error {
 }
 
 func mainRunE(cmd *cobra.Command, args []string) error {
-	logger.SetLevelDebug(debug)
+	logger.Infof("helm-lint-kcl version %s, kcl-lang %s\n", appVersion, kcl.KclvmAbiVersion)
+	if debug {
+		logger.SetLevelDebug(debug)
+	}
 
 	_, chart := args[0], args[1]
 
 	filePaths := []string{valuesFilePath, schemasFilePath}
 
-	d := downloader.New(chart, version)
+	d := downloader.New(chart, chartVersion)
 	contentFilePaths, err := d.GetFilesContents(filePaths...)
 	if err != nil {
 		return err
@@ -88,11 +96,16 @@ func mainRunE(cmd *cobra.Command, args []string) error {
 	}
 
 	if showValues {
-		logger.Infof("Values:\n%s", mValues)
+		logger.Infof("## Values\n\n%s\n", mValues)
+	}
+
+	if showSchemas {
+		logger.Infof("## Schemas\n\n%s\n", contentFilePaths[schemasFilePath])
 	}
 
 	v := validator.New(mValues, contentFilePaths[schemasFilePath])
 	if err := v.Validate(); err != nil {
+		logger.Info("❌ Incorrect values validation!")
 		return err
 	} else {
 		logger.Info("✅ Values validation successful!")

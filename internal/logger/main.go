@@ -32,13 +32,13 @@ func Info(message string) {
 }
 
 func Debugf(message string, args ...interface{}) {
-	if level >= LevelDebug {
+	if level <= LevelDebug {
 		fmt.Printf(message+"\n", args...)
 	}
 }
 
 func Debug(message string) {
-	if level >= LevelDebug {
+	if level <= LevelDebug {
 		fmt.Println(message)
 	}
 }

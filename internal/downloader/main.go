@@ -16,9 +16,8 @@ import (
 )
 
 type Downloader struct {
-	chart     string
-	version   string
-	filePaths []string
+	chart   string
+	version string
 }
 
 func New(chart, version string) *Downloader {
@@ -35,7 +34,9 @@ func (d *Downloader) GetFilesContents(filePaths ...string) (map[string][]byte, e
 		return nil, err
 	}
 
-	chartFileContents, err := d.ReadChart(chartDirPath, d.filePaths...)
+	logger.Debugf("locate chart %s", chartDirPath)
+
+	chartFileContents, err := d.ReadChart(chartDirPath, filePaths...)
 	if err != nil {
 		return nil, err
 	}
@@ -48,6 +49,7 @@ func (d *Downloader) GetChart(chart, version string) (string, error) {
 	newChartDirPath := chart
 	logger.Debugf("get chart %s %s", chart, version)
 	if _, err := os.Stat(chart); os.IsNotExist(err) {
+		logger.Debugf("pull chart %s %s", chart, version)
 		newChartDirPath, err = d.pullChart(chart, version)
 		if err != nil {
 			return "", err
@@ -62,16 +64,17 @@ func (d *Downloader) pullChart(chart, version string) (string, error) {
 	if len(version) > 0 {
 		vParam = "--version " + version
 	}
-	cmd := fmt.Sprintf("helm pull %s -d %s %s", chart, os.TempDir(), vParam)
+	tempDir := os.TempDir()
+	cmd := fmt.Sprintf("helm pull %s -d %s %s", chart, tempDir, vParam)
 	logger.Debugf("exec: %s", cmd)
-	output, err := exec.Command("bash", "-c", cmd).Output()
+	output, err := exec.Command("bash", "-c", cmd).CombinedOutput()
 	if len(output) > 0 {
-		logger.Infof("output: %s", output)
+		logger.Info(string(output))
 	}
 	if err != nil {
-		return "", fmt.Errorf("fail %s: %v", cmd, err)
+		return "", fmt.Errorf("fail %v", err)
 	}
-	return fmt.Sprintf("%s/%s-%s.tgz", os.TempDir(), path.Base(chart), version), nil
+	return fmt.Sprintf("%s%s-%s.tgz", tempDir, path.Base(chart), version), nil
 }
 
 // Leemos los archivos del chart, si es un tgz, descomprimimos los archivos y los leemos
@@ -91,6 +94,7 @@ func (d *Downloader) ReadChartFileContentsLocal(chartDirPath string, filePaths .
 		if err != nil {
 			return nil, err
 		}
+		logger.Debugf("reading %s", filePath)
 		contents[filePath] = content
 	}
 	return contents, nil
