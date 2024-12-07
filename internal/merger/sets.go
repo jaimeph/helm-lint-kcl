@@ -37,11 +37,7 @@ func resolveSet(set string) ([]string, any, error) {
 		return nil, "", err
 	}
 	key = strings.ReplaceAll(key, "\\", "")
-
-	keys, err := splitKey(key)
-	if err != nil {
-		return nil, "", err
-	}
+	keys := splitKey(key)
 	return keys, value, nil
 }
 
@@ -53,17 +49,17 @@ func splitKeyValue(value string) (string, any, error) {
 	return parts[0], isNumberReturn(parts[1]), nil
 }
 
-func splitKey(value string) ([]string, error) {
+func splitKey(value string) []string {
 	if !strings.Contains(value, ".") {
-		return []string{value}, nil
+		return []string{value}
 	}
 	keys := strings.Split(value, ".")
 	for i, k := range keys {
 		if strings.EqualFold(k, "annotations") || strings.EqualFold(k, "labels") {
-			return append(keys[:i], k, strings.Join(keys[i+1:], ".")), nil
+			return append(keys[:i], k, strings.Join(keys[i+1:], "."))
 		}
 	}
-	return keys, nil
+	return keys
 }
 
 func isNumberReturn(value string) any {

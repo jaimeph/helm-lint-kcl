@@ -43,7 +43,7 @@ func (d *Downloader) GetFilesContents(filePaths ...string) (map[string][]byte, e
 	return chartFileContents, nil
 }
 
-// Obtenemos el chart, si no es una ruta local, lo descargamos con pull chart (comando de helm)
+// Obtenemos el chart, si no es una ruta local, lo descargamos con pull chart
 func (d *Downloader) GetChart(chart, version string) (string, error) {
 	newChartDirPath := chart
 	logger.Debugf("get chart %s %s", chart, version)

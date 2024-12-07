@@ -38,8 +38,10 @@ func main() {
 	rootCmd.Flags().StringVarP(&version, "version", "v", "", "chart version")
 	rootCmd.Flags().BoolVar(&debug, "debug", false, "enable debug")
 	rootCmd.Flags().BoolVar(&showValues, "show-values", false, "show values")
-	rootCmd.Flags().StringSliceVarP(&values, "values", "f", []string{}, "specify values in a YAML file or a URL (can specify multiple)")
-	rootCmd.Flags().StringSliceVar(&sets, "set", []string{}, "set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)")
+	rootCmd.Flags().StringSliceVarP(&values, "values", "f", []string{},
+		"specify values in a YAML file or a URL (can specify multiple)")
+	rootCmd.Flags().StringSliceVar(&sets, "set", []string{},
+		"set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)")
 
 	if err := rootCmd.Execute(); err != nil {
 		logger.Errorf("Execution error: %s", err)
