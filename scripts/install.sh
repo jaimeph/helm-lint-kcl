@@ -26,7 +26,7 @@ fi
 VERSION=${VERSION#v}  # Remove 'v' prefix if present
 
 # Construct file name and URL
-ARCHIVE="helm-cel_${VERSION}_${OS}_${ARCH}"
+ARCHIVE="helm-lint-kcl_${VERSION}_${OS}_${ARCH}"
 if [ "$OS" = "Windows" ]; then
     ARCHIVE="${ARCHIVE}.zip"
 else
