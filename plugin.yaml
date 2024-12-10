@@ -1,5 +1,5 @@
 name: lint-kcl
-version: 0.0.0
+version: 0.0.1
 usage: Validate Helm values using KCL schemas
 description: A Helm plugin to validate values.yaml using KCL schemas defined in schemas.k.
 command: "$HELM_PLUGIN_DIR/bin/helm-lint-kcl"
