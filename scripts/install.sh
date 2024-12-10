@@ -21,7 +21,7 @@ esac
 
 # Get the latest version if not specified
 if [ -z "${VERSION}" ]; then
-    VERSION=$(curl -s https://api.github.com/repos/jaimeph/helm-lint-kcl/releases | grep '"tag_name":' | cut -d'"' -f4)
+    VERSION=$(curl -s https://api.github.com/repos/jaimeph/helm-lint-kcl/releases/latest | grep '"tag_name":' | cut -d'"' -f4)
 fi
 VERSION=${VERSION#v}  # Remove 'v' prefix if present
 
