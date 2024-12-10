@@ -6,9 +6,9 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -60,21 +60,33 @@ func (d *Downloader) GetChart(chart, version string) (string, error) {
 
 // Descargamos el chart del repositorio de helm o de oci, añadimos la versión si se especifica
 func (d *Downloader) pullChart(chart, version string) (string, error) {
-	vParam := ""
+	cmdVersion := ""
 	if len(version) > 0 {
-		vParam = "--version " + version
+		cmdVersion = "--version " + version
 	}
-	tempDir := os.TempDir()
-	cmd := fmt.Sprintf("helm pull %s -d %s %s", chart, tempDir, vParam)
+
+	tempDir, err := os.MkdirTemp("", "helm-lint-kcl-*")
+	if err != nil {
+		return "", fmt.Errorf("the temporary directory could not be created: %w", err)
+	}
+
+	cmd := fmt.Sprintf("helm pull %s -d %s %s", chart, tempDir, cmdVersion)
 	logger.Debugf("exec: %s", cmd)
 	output, err := exec.Command("bash", "-c", cmd).CombinedOutput()
+
 	if len(output) > 0 {
-		logger.Info(string(output))
+		logger.Debug(string(output))
 	}
 	if err != nil {
-		return "", fmt.Errorf("fail %v", err)
+		return "", fmt.Errorf("helm pull %v", err)
 	}
-	return fmt.Sprintf("%s%s-%s.tgz", tempDir, path.Base(chart), version), nil
+
+	chartTempPath, err := findTgz(tempDir)
+	if err != nil {
+		return "", fmt.Errorf("findTgz %v", err)
+	}
+	logger.Debugf("downloaded chart %s", chartTempPath)
+	return chartTempPath, err
 }
 
 // Leemos los archivos del chart, si es un tgz, descomprimimos los archivos y los leemos
@@ -90,12 +102,19 @@ func (d *Downloader) ReadChart(chartDirPath string, filePath ...string) (map[str
 func (d *Downloader) ReadChartFileContentsLocal(chartDirPath string, filePaths ...string) (map[string][]byte, error) {
 	contents := make(map[string][]byte, len(filePaths))
 	for _, filePath := range filePaths {
-		content, err := os.ReadFile(filepath.Join(chartDirPath, filePath))
-		if err != nil {
-			return nil, err
+		fullPath := filepath.Join(chartDirPath, filePath)
+		if _, err := os.Stat(fullPath); err == nil {
+			content, err := os.ReadFile(fullPath)
+			if err != nil {
+				return nil, err
+			}
+			logger.Debugf("reading %s", filePath)
+			contents[filePath] = content
+		} else if os.IsNotExist(err) {
+			return nil, fmt.Errorf("file %s does not exist into chart", filePath)
+		} else {
+			return nil, fmt.Errorf("error reading file %s: %w", filePath, err)
 		}
-		logger.Debugf("reading %s", filePath)
-		contents[filePath] = content
 	}
 	return contents, nil
 }
@@ -103,16 +122,19 @@ func (d *Downloader) ReadChartFileContentsLocal(chartDirPath string, filePaths .
 // Leemos los archivos del chart tgz
 func (d *Downloader) ReadChartFileContentsTgz(chartDirPath string, filePaths ...string) (map[string][]byte, error) {
 	contents := make(map[string][]byte, len(filePaths))
+	for _, filePath := range filePaths {
+		contents[filePath] = nil
+	}
 
 	file, err := os.Open(chartDirPath)
 	if err != nil {
-		return nil, fmt.Errorf("no se pudo abrir el archivo: %w", err)
+		return nil, fmt.Errorf("error opening file: %w", err)
 	}
 	defer file.Close()
 
 	gzr, err := gzip.NewReader(file)
 	if err != nil {
-		return nil, fmt.Errorf("error creando gzip reader: %w", err)
+		return nil, fmt.Errorf("error creating gzip reader: %w", err)
 	}
 	defer gzr.Close()
 
@@ -124,7 +146,7 @@ func (d *Downloader) ReadChartFileContentsTgz(chartDirPath string, filePaths ...
 			break
 		}
 		if err != nil {
-			return nil, fmt.Errorf("error leyendo el archivo tar: %w", err)
+			return nil, fmt.Errorf("error reading tar header: %w", err)
 		}
 
 		parts := strings.Split(header.Name, "/")
@@ -135,11 +157,39 @@ func (d *Downloader) ReadChartFileContentsTgz(chartDirPath string, filePaths ...
 				logger.Debugf("extracting %s", name)
 				var buffer bytes.Buffer
 				if _, err := io.Copy(&buffer, tarReader); err != nil {
-					return nil, fmt.Errorf("error copiando contenido del archivo: %w", err)
+					return nil, fmt.Errorf("error copying file contents: %w", err)
 				}
 				contents[filePath] = buffer.Bytes()
 			}
 		}
 	}
+
+	for filePath, content := range contents {
+		if content == nil {
+			return nil, fmt.Errorf("file %s does not exist into chart", filePath)
+		}
+	}
+
 	return contents, nil
+}
+
+func findTgz(dirPath string) (string, error) {
+	var tgzFile string
+	err := filepath.WalkDir(dirPath, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() && filepath.Ext(path) == ".tgz" {
+			tgzFile = path
+			return filepath.SkipDir
+		}
+		return nil
+	})
+	if err != nil {
+		return "", fmt.Errorf("no .tgz file was found in the directory: %s", dirPath)
+	}
+	if tgzFile == "" {
+		return "", fmt.Errorf("no .tgz file was found in the directory: %s", dirPath)
+	}
+	return tgzFile, nil
 }

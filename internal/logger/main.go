@@ -1,6 +1,9 @@
 package logger
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 type Level int
 
@@ -17,6 +20,10 @@ func SetLevel(l Level) {
 	level = l
 }
 
+func isDebug() bool {
+	return level == LevelDebug
+}
+
 func SetLevelDebug(active bool) {
 	if active {
 		level = LevelDebug
@@ -24,29 +31,29 @@ func SetLevelDebug(active bool) {
 }
 
 func Infof(message string, args ...interface{}) {
-	fmt.Printf(message+"\n", args...)
+	fmt.Fprintf(os.Stdout, message+"\n", args...)
 }
 
 func Info(message string) {
-	fmt.Println(message)
+	fmt.Fprint(os.Stdout, message)
 }
 
 func Debugf(message string, args ...interface{}) {
-	if level <= LevelDebug {
-		fmt.Printf(message+"\n", args...)
+	if isDebug() {
+		fmt.Fprintf(os.Stdout, message+"\n", args...)
 	}
 }
 
 func Debug(message string) {
-	if level <= LevelDebug {
-		fmt.Println(message)
+	if isDebug() {
+		fmt.Fprint(os.Stdout, message)
 	}
 }
 
 func Errorf(message string, args ...interface{}) {
-	fmt.Printf(message+"\n", args...)
+	fmt.Fprintf(os.Stdout, message+"\n", args...)
 }
 
 func Error(message string) {
-	fmt.Println(message)
+	fmt.Fprint(os.Stdout, message)
 }
